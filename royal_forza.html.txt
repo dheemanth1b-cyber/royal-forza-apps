@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💥 The Royal Forza 💥</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 0; }
+    header { text-align: center; padding: 20px; background: #222; }
+    h1 { color: #ffcc00; }
+    form { max-width: 600px; margin: 20px auto; background: #222; padding: 20px; border-radius: 10px; }
+    label { display: block; margin: 10px 0 5px; }
+    input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 5px; border: none; }
+    button { padding: 10px 20px; border: none; border-radius: 5px; background: #ffcc00; color: #111; font-weight: bold; cursor: pointer; }
+    table { width: 90%; margin: 20px auto; border-collapse: collapse; }
+    th, td { padding: 10px; border: 1px solid #444; text-align: center; }
+    th { background: #333; }
+</style>
+</head>
+<body>
+<header>
+    <h1>💥 The Royal Forza 💥</h1>
+    <p>Join the squad! Loyalty, fun, and real gang energy await 😎🔥</p>
+</header>
+
+<form id="gangForm">
+    <h2>Friendship Gang Application</h2>
+    <label for="nickname">Nickname:</label>
+    <input type="text" id="nickname" name="nickname" required>
+
+    <label for="age">Age:</label>
+    <input type="text" id="age" name="age" required>
+
+    <label for="vibe">Your Vibe:</label>
+    <input type="text" id="vibe" name="vibe" placeholder="Funny, Chill, Wild..." required>
+
+    <button type="submit">Submit Application</button>
+</form>
+
+<h2 style="text-align:center;">Gang Attendance</h2>
+<table id="attendanceTable">
+    <thead>
+        <tr>
+            <th>Nickname</th>
+            <th>Present</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+// ====== CONFIG: Replace this with your Google Apps Script Web App URL ======
+const SHEET_URL = "YOUR_WEB_APP_URL_HERE";
+
+// ====== SUBMIT NEW MEMBER ======
+document.getElementById('gangForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const app = {};
+    formData.forEach((v,k)=>app[k]=v);
+
+    fetch(SHEET_URL, {
+        method:'POST',
+        body: JSON.stringify({nickname: app.nickname})
+    }).then(r=>r.json()).then(data=>{
+        if(data.result==="success"){
+            alert(`Welcome to the squad, ${app.nickname}! 😎🔥`);
+            e.target.reset();
+            loadMembers();
+        }
+    }).catch(err=>{console.error(err); alert("Error submitting application");});
+});
+
+// ====== LOAD MEMBERS ======
+function loadMembers(){
+    fetch(SHEET_URL)
+    .then(r=>r.json())
+    .then(data=>{
+        const tbody = document.getElementById('attendanceTable').querySelector('tbody');
+        tbody.innerHTML = '';
+        data.forEach(member => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${member.nickname}</td><td><input type="checkbox" ${member.present ? 'checked' : ''} onchange="updatePresence('${member.nickname}', this.checked)"/></td>`;
+            tbody.appendChild(tr);
+        });
+    }).catch(err=>console.error(err));
+}
+
+// ====== UPDATE ATTENDANCE ======
+function updatePresence(nickname, present){
+    fetch(SHEET_URL, {
+        method:'POST',
+        body: JSON.stringify({nickname, present})
+    }).catch(err=>console.error(err));
+}
+
+// Load members on page load
+loadMembers();
+</script>
+</body>
+</html>
